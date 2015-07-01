@@ -59,6 +59,7 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.util.Log;
 import android.content.Context;
 import com.broadcom.fm.fmreceiver.IFmReceiverCallback;
@@ -623,11 +624,21 @@ public final class FmProxy {
             return ;
         }
 
-             if (!mContext.bindService(new Intent(IFmReceiverService.class.getName()),
-                              mConnection, Context.BIND_AUTO_CREATE)) {
+             if (!doBind(new Intent(IFmReceiverService.class.getName()),
+                              mConnection, Context.BIND_AUTO_CREATE, UserHandle.OWNER)) {
              Log.e(TAG, "Could not bind to IFmReceiverService Service");
          }
 
+    }
+
+    boolean doBind(Intent intent, ServiceConnection conn, int flags, UserHandle user) {
+        ComponentName comp = intent.resolveSystemService(mContext.getPackageManager(), 0);
+        intent.setComponent(comp);
+        if (comp == null || !mContext.bindServiceAsUser(intent, conn, flags, user)) {
+            Log.e(TAG, "Fail to bind to: " + intent);
+            return false;
+        }
+        return true;
     }
 
     /**
