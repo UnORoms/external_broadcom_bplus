@@ -384,15 +384,17 @@ public class FmRadio extends Activity
         fmSetSnrThresholdPending = false;
         fmStartPlay = true;
         /* Initialize the radio. This can give us GUI initialization info. */
-        Log.d(TAG, "Turning on radio... mFmReceiver = " + mFmReceiver+" ; Softmute state:"+FmConstants.FM_SOFTMUTE_FEATURE_ENABLED);
+        Log.d(TAG, "Turning on radio... mFmReceiver = " + mFmReceiver + " ; Softmute state:" + FmConstants.FM_SOFTMUTE_FEATURE_ENABLED);
         if (mFmReceiver == null) {
             Log.e(TAG, "Invalid FM Receiver Proxy!!!!");
             return;
         }
         if(FmConstants.FM_SOFTMUTE_FEATURE_ENABLED)
-		    status = mFmReceiver.turnOnRadio(FmProxy.FUNC_REGION_NA | FmProxy.FUNC_RBDS | FmProxy.FUNC_AF | FmProxy.FUNC_SOFTMUTE, getPackageName());
+		    status = mFmReceiver.turnOnRadio(FmProxy.FUNC_RDS | FmProxy.FUNC_AF | FmProxy.FUNC_SOFTMUTE, getPackageName());
         else
-            status = mFmReceiver.turnOnRadio(FmProxy.FUNC_REGION_NA | FmProxy.FUNC_RBDS | FmProxy.FUNC_AF, getPackageName());
+            status = mFmReceiver.turnOnRadio(FmProxy.FUNC_RDS | FmProxy.FUNC_AF, getPackageName());
+        mFmReceiver.setFMVolume(0);
+
         Log.d(TAG, "Turn on radio status = " + status);
         if (status == FmProxy.STATUS_OK) {
             //powerupComplete();
@@ -463,6 +465,7 @@ public class FmRadio extends Activity
     	Log.d(TAG,"powerupcomplete");
     	mPendingFrequency = mSharedPrefs.getInt(lastFreqPreferenceKey, DEFAULT_FREQUENCY);
         updateFrequency(mPendingFrequency);
+        updateMuted(false);
     }
 
     @Override
@@ -832,10 +835,6 @@ public class FmRadio extends Activity
             updateAudioMode(mSharedPrefs);
         } else if (audioPathUpdatePending) {
             updateAudioPath(mSharedPrefs);
-    	} else if (fmVolumeUpdatepending) {
-    		updateFMVolume(FmProxy.FM_VOLUME_MAX
-              * mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-              / mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
         } else if (frequencyUpdatePending) {
             updateFrequency(mPendingFrequency);
         } else if (muteUpdatePending) {
@@ -844,6 +843,10 @@ public class FmRadio extends Activity
             updateStationSearch(mPendingSearchDirection);
         } else if (rdsModeUpdatePending) {
             updateRdsMode(mSharedPrefs);
+        } else if (fmVolumeUpdatepending) {
+            updateFMVolume(FmProxy.FM_VOLUME_MAX
+                    * mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    / mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
         } else if(fmSetSnrThresholdPending) {
             updateSetSnrThreshold(mSharedPrefs);
 //        } else if(fmStartPlay) {
